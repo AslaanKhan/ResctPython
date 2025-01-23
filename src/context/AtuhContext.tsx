@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authService } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   isLoggedIn: boolean;

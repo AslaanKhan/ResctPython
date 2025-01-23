@@ -1,15 +1,16 @@
+"use client"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import * as z from "zod"
-import { Button } from "../components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form"
-import { Input } from "../components/ui/input"
-import { useToast } from "../components/ui/use-toast"
-import { Toaster } from "../components/ui/toaster"
-import { useAuth } from "@/context/AtuhContext"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "../context/AtuhContext"
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -20,15 +21,17 @@ const signupSchema = loginSchema.extend({
   email: z.string().email("Invalid email address"),
 })
 
+type LoginFormValues = z.infer<typeof loginSchema>
+type SignupFormValues = z.infer<typeof signupSchema>
+
 export function Login() {
   const [isLogin, setIsLogin] = useState(true)
-  const schema = isLogin ? loginSchema : signupSchema
   const navigate = useNavigate()
   const { toast } = useToast()
   const { login, signup, isLoggedIn } = useAuth()
 
-  const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const form = useForm<LoginFormValues | SignupFormValues>({
+    resolver: zodResolver(isLogin ? loginSchema : signupSchema),
     defaultValues: {
       email: "",
       username: "",
@@ -36,28 +39,26 @@ export function Login() {
     },
   })
 
-  if(isLoggedIn){
+  if (isLoggedIn) {
     navigate("/dashboard")
+    return null
   }
 
-
-  async function onSubmit(values: z.infer<typeof schema>) {
+  const onSubmit = async (values: LoginFormValues | SignupFormValues) => {
     try {
       if (isLogin) {
-        const { username, password } = values
+        const { username, password } = values as LoginFormValues
         await login(username, password)
         toast({
           title: "Login Successful",
           description: "Welcome back!",
-          duration: 3000,
         })
       } else {
-        const { email, username, password } = values as z.infer<typeof signupSchema>
+        const { email, username, password } = values as SignupFormValues
         await signup(email, username, password)
         toast({
           title: "Sign Up Successful",
           description: "Your account has been created.",
-          duration: 3000,
         })
       }
       navigate("/dashboard")
@@ -67,9 +68,13 @@ export function Login() {
         title: "Authentication Error",
         description: "An error occurred during authentication. Please try again.",
         variant: "destructive",
-        duration: 5000,
       })
     }
+  }
+
+  const toggleAuthMode = () => {
+    setIsLogin((prev) => !prev)
+    form.reset()
   }
 
   return (
@@ -134,15 +139,7 @@ export function Login() {
               </Button>
               <p className="text-sm text-gray-600">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <Button
-                  variant="link"
-                  type="button"
-                  className="p-0 text-blue-600"
-                  onClick={() => {
-                    setIsLogin((prev) => !prev)
-                    form.reset()
-                  }}
-                >
+                <Button variant="link" type="button" className="p-0 text-blue-600" onClick={toggleAuthMode}>
                   {isLogin ? "Sign Up" : "Login"}
                 </Button>
               </p>
@@ -150,7 +147,6 @@ export function Login() {
           </form>
         </Form>
       </Card>
-      <Toaster />
     </div>
   )
 }

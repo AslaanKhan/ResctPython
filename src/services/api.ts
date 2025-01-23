@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.2.115:5001/api'; // Replace with your actual API URL
+// const API_URL = 'http://192.168.2.115:5001/api'; // Replace with your actual API URL
+// const API_URL = 'http://35.238.226.229:5001/api'; // Replace with your actual API URL
+const API_URL = ' http://localhost:5001/api'; // Replace with your actual API URL
 
 const api = axios.create({
   baseURL: API_URL,
